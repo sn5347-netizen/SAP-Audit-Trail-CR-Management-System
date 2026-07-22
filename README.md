@@ -249,53 +249,50 @@ http://localhost:3000
 ---
 ## 📸 Application Screenshots
 
-> **Note:** Screenshots will be added after deployment to showcase the application interface and workflow.
-
 ### 🔐 Login Page
-
-*(Screenshot Coming Soon)*
-
----
+<p align="center">
+  <img src="assets/login.png.png" width="850">
+</p>
 
 ### 👤 Requester Dashboard
+<p align="center">
+  <img src="assets/requester-dashboard.png.png" width="850">
+</p>
 
-*(Screenshot Coming Soon)*
+### 🛠 SAP AMS Dashboard
+<p align="center">
+  <img src="assets/ams-dashboard.png.png" width="850">
+</p>
 
----
+### 👨‍💼 Manager Dashboard
+<p align="center">
+  <img src="assets/manager-dashboard.png.png" width="850">
+</p>
 
-### 📊 Admin Dashboard
+### 🧪 Testing Dashboard
+<p align="center">
+  <img src="assets/testing-dashboard.png.png" width="850">
+</p>
 
-*(Screenshot Coming Soon)*
-
----
-
-### 👨‍💼 SAP AMS Dashboard
-
-*(Screenshot Coming Soon)*
-
----
-
-### 👔 Manager Dashboard
-
-*(Screenshot Coming Soon)*
-
----
-
-### 🛡️ CAB Dashboard
-
-*(Screenshot Coming Soon)*
-
----
+### 📋 CAB Dashboard
+<p align="center">
+  <img src="assets/cab-dashboard.png.png" width="850">
+</p>
 
 ### 🚀 Production Dashboard
+<p align="center">
+  <img src="assets/production-dashboard.png.png" width="850">
+</p>
 
-*(Screenshot Coming Soon)*
+### 📊 Admin Dashboard
+<p align="center">
+  <img src="assets/admin-dashboard.png.png" width="850">
+</p>
 
----
-
-### 📋 Change Request Details
-
-*(Screenshot Coming Soon)*
+### 📄 Change Request Details
+<p align="center">
+  <img src="assets/cr-details.png.png" width="850">
+</p>
 
 ---
 ## 🔮 Future Enhancements
