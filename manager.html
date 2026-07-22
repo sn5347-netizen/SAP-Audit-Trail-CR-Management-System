@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Manager Dashboard</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+    padding:30px;
+}
+
+h1{
+    color:#0a6ed1;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+    max-width:1000px;
+}
+
+textarea{
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    margin-top:10px;
+}
+
+.approve{
+    background:#28a745;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:6px;
+    margin-right:10px;
+    cursor:pointer;
+}
+
+.reject{
+    background:#dc3545;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.ai-box{
+
+    background:#e8f4ff;
+    border-left:5px solid #0a6ed1;
+    padding:15px;
+    margin-top:20px;
+}
+.logout{
+
+    background:#dc3545;
+    color:white;
+
+    border:none;
+
+    padding:10px 20px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    height:45px;
+}
+
+.logout:hover{
+
+    background:#c82333;
+}
+
+
+</style>
+
+</head>
+
+<body>
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+
+    <h1>Manager Dashboard</h1>
+
+    <div>
+
+        <button
+        onclick="
+        localStorage.setItem('dashboardFrom','manager');
+        window.location.href='index.html';
+        "
+        style="
+        background:#17a2b8;
+        color:white;
+        border:none;
+        padding:10px 18px;
+        border-radius:8px;
+        cursor:pointer;
+        margin-right:10px;
+        ">
+        📊 Analytics Dashboard
+        </button>
+
+        <button
+        onclick="logout()"
+        style="
+        background:#dc3545;
+        color:white;
+        border:none;
+        padding:10px 18px;
+        border-radius:8px;
+        cursor:pointer;
+        ">
+        🚪 Logout
+        </button>
+
+    </div>
+
+</div>
+<div
+id="managerNotification"
+style="
+margin:20px auto;
+padding:18px;
+background:#fff3cd;
+border-left:5px solid #ffc107;
+border-radius:10px;
+font-size:28px;
+font-weight:bold;
+width:fit-content;
+display:none;
+">
+🔔 Waiting for Manager Approval :
+<span id="managerCount"></span>
+</div>
+<div id="managerContainer"></div>
+<script>
+    const role = localStorage.getItem("role");
+
+        if(role !== "Manager" && role !== "Admin"){
+
+            alert("Access Denied");
+
+            window.location.href = "login.html";
+
+        }
+
+async function loadManagerCRs(){
+
+    const response =
+    await fetch("http://localhost:3000/crs");
+
+    const crs =
+    await response.json();
+
+    const container =
+    document.getElementById("managerContainer");
+
+    container.innerHTML = "";
+
+    let pendingCount = 0;
+
+    crs.forEach(cr => {
+
+        if(cr.status !== "Manager Approval Pending"){
+            return;
+        }
+
+        pendingCount++;
+
+        container.innerHTML += `
+
+        <div class="card">
+
+            <h2>${cr.cr_id} : ${cr.title}</h2>
+
+            <p><strong>Module:</strong> ${cr.module}</p>
+
+            <p><strong>Priority:</strong> ${cr.priority}</p>
+
+            <p><strong>Risk:</strong> ${cr.risk}</p>
+
+            <p><strong>Consultant:</strong> ${cr.consultant}</p>
+
+            <hr>
+
+            <h3>Manager Comments</h3>
+
+            <textarea
+            id="comment-${cr.id}"
+            rows="4"
+            placeholder="Enter comments">
+            </textarea>
+
+            <br><br>
+
+            <button
+            class="approve"
+            onclick="approveCR(${cr.id})">
+            Approve
+            </button>
+
+            <button
+            class="reject"
+            onclick="rejectCR(${cr.id})">
+            Reject
+            </button>
+
+        </div>
+
+        <br>
+
+        `;
+
+    });
+    if (pendingCount === 0) {
+
+    container.innerHTML = `
+       <div class="card" style="text-align:center;padding:50px;">
+
+    <div style="font-size:60px;color:#0a6ed1;">📄</div>
+
+    <h2 style="margin-top:15px;">No Pending Change Requests</h2>
+
+    <p style="color:#666;">
+        There are currently no change requests awaiting AMS analysis.
+    </p>
+
+</div>
+    `;
+
+}
+    const notification =
+document.getElementById("managerNotification");
+
+const count =
+document.getElementById("managerCount");
+
+if(pendingCount > 0){
+
+    notification.style.display = "block";
+    count.innerText = pendingCount;
+
+    setTimeout(() => {
+
+        notification.style.opacity = "0";
+
+        setTimeout(() => {
+
+            notification.style.display = "none";
+            notification.style.opacity = "1";
+
+        },500);
+
+    },3000);
+
+}
+else{
+
+    notification.style.display = "none";
+
+}
+
+}
+
+async function approveCR(crId){
+
+    const response =
+    await fetch(
+        "http://localhost:3000/manager-approve",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                crId
+            })
+        }
+    );
+
+    const data =
+    await response.json();
+
+    alert(data.message);
+
+    loadManagerCRs();
+
+}
+
+async function rejectCR(crId){
+
+    const response =
+    await fetch(
+        "http://localhost:3000/manager-reject",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                crId
+            })
+        }
+    );
+
+    const data =
+    await response.json();
+
+    alert(data.message);
+
+    loadManagerCRs();
+
+}
+function logout(){
+
+    document.getElementById("logoutModal").style.display = "flex";
+
+}
+
+function closeLogoutModal(){
+
+    document.getElementById("logoutModal").style.display = "none";
+
+}
+
+function confirmLogout(){
+
+    localStorage.clear();
+
+    window.location.href = "login.html";
+
+}
+loadManagerCRs();
+
+</script>
+<div
+id="logoutModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:1000;
+">
+
+    <div
+    style="
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:350px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    ">
+
+        <h2 style="margin-top:0;">Confirm Logout</h2>
+
+        <p>
+            Are you sure you want to logout?
+        </p>
+
+        <button
+onclick="closeLogoutModal()"
+style="
+background:#6c757d;
+color:white;
+border:none;
+padding:12px 24px;
+border-radius:6px;
+cursor:pointer;
+margin-right:10px;
+font-weight:600;
+">
+Cancel
+</button>
+
+<button
+onclick="confirmLogout()"
+style="
+background:#dc3545;
+color:white;
+border:none;
+padding:12px 24px;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+">
+Logout
+</button>
+
+    </div>
+
+</div>
+</body>
+</html>

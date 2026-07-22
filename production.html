@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Production Dashboard</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+    padding:30px;
+}
+
+h1{
+    color:#0a6ed1;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+.deploy{
+    background:#28a745;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:6px;
+    cursor:pointer;
+    margin-right:10px;
+}
+
+.rollback{
+    background:#dc3545;
+    color:white;
+    border:none;
+    padding:12px 25px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<button
+onclick="logout()"
+style="
+background:#dc3545;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+float:right;
+">
+🚪 Logout
+</button>
+
+<h1>Production Dashboard</h1>
+
+<div
+id="productionNotification"
+style="
+margin:20px auto;
+padding:18px;
+background:#fff3cd;
+border-left:5px solid #ffc107;
+border-radius:10px;
+font-size:28px;
+font-weight:bold;
+width:fit-content;
+display:none;
+">
+🔔 Ready for Deployment :
+<span id="productionCount"></span>
+</div>
+
+<div id="productionContainer"></div>
+<script>
+    const role = localStorage.getItem("role");
+
+    if(role !== "Production" && role !== "Admin"){
+
+        alert("Access Denied");
+
+        window.location.href = "login.html";
+
+    }
+
+async function loadProductionCRs(){
+
+    const response =
+    await fetch("http://localhost:3000/production-crs");
+
+    const crs =
+    await response.json();
+
+    const container =
+    document.getElementById("productionContainer");
+
+    const notification =
+    document.getElementById("productionNotification");
+
+    const count =
+    document.getElementById("productionCount");
+
+    let pendingCount = crs.length;
+
+    if(pendingCount > 0){
+
+        notification.style.display = "block";
+        count.innerText = pendingCount;
+
+        setTimeout(() => {
+
+            notification.style.opacity = "0";
+
+            setTimeout(() => {
+
+                notification.style.display = "none";
+                notification.style.opacity = "1";
+
+            },500);
+
+        },3000);
+
+    }
+    else{
+
+        notification.style.display = "none";
+
+    }
+
+    container.innerHTML = "";
+
+    crs.forEach(cr => {
+
+        container.innerHTML += `
+
+        <div class="card">
+
+            <h2>${cr.cr_id}</h2>
+
+            <p><strong>Title:</strong> ${cr.title}</p>
+
+            <p><strong>Module:</strong> ${cr.module}</p>
+
+            <p><strong>Priority:</strong> ${cr.priority}</p>
+
+            <p><strong>Risk:</strong> ${cr.risk}</p>
+
+            <button
+            class="deploy"
+            onclick="deployCR('${cr.cr_id}')">
+            Deploy Change
+            </button>
+
+            <button
+            class="rollback"
+            onclick="rollbackCR('${cr.cr_id}')">
+            Rollback Change
+            </button>
+
+        </div>
+
+        `;
+
+    });
+    if (pendingCount === 0) {
+
+    container.innerHTML = `
+        <div class="card" style="text-align:center;padding:50px;">
+
+    <div style="font-size:60px;color:#0a6ed1;">📄</div>
+
+    <h2 style="margin-top:15px;">No Pending Change Requests</h2>
+
+    <p style="color:#666;">
+        There are currently no change requests awaiting AMS analysis.
+    </p>
+
+</div>
+    `;
+
+}
+
+}
+async function deployCR(crId){
+
+    const response =
+    await fetch(
+        "http://localhost:3000/deploy-cr",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                crId
+            })
+        }
+    );
+
+    const data =
+    await response.json();
+
+    alert(data.message);
+
+    loadProductionCRs();
+}
+
+loadProductionCRs();
+function logout(){
+
+    document.getElementById("logoutModal").style.display = "flex";
+
+}
+
+function closeLogoutModal(){
+
+    document.getElementById("logoutModal").style.display = "none";
+
+}
+
+function confirmLogout(){
+
+    localStorage.clear();
+
+    window.location.href = "login.html";
+
+}
+
+</script>
+<div
+id="logoutModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:1000;
+">
+
+    <div
+    style="
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:350px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    ">
+
+        <h2 style="margin-top:0;">Confirm Logout</h2>
+
+        <p>
+            Are you sure you want to logout?
+        </p>
+
+        <button
+onclick="closeLogoutModal()"
+style="
+background:#6c757d;
+color:white;
+border:none;
+padding:12px 24px;
+border-radius:6px;
+cursor:pointer;
+margin-right:10px;
+font-weight:600;
+">
+Cancel
+</button>
+
+<button
+onclick="confirmLogout()"
+style="
+background:#dc3545;
+color:white;
+border:none;
+padding:12px 24px;
+border-radius:6px;
+cursor:pointer;
+font-weight:600;
+">
+Logout
+</button>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

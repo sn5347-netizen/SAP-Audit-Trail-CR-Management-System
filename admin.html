@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Admin Dashboard</title>
+
+<style>
+
+body{
+font-family:Arial,sans-serif;
+background:#f4f6f9;
+padding:30px;
+}
+
+h1{
+color:#0a6ed1;
+}
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+margin-bottom:30px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.card h2{
+color:#0a6ed1;
+}
+
+.audit{
+background:white;
+padding:25px;
+border-radius:12px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+margin-top:20px;
+}
+
+.audit-item{
+padding:12px;
+border-bottom:1px solid #ddd;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<div class="dashboard">
+
+<div class="card">
+<h2>3</h2>
+<p>Total CRs</p>
+</div>
+
+<div class="card">
+<h2>1</h2>
+<p>Pending Approvals</p>
+</div>
+
+<div class="card">
+<h2>1</h2>
+<p>High Risk CRs</p>
+</div>
+
+<div class="card">
+<h2>98%</h2>
+<p>Deployment Success</p>
+</div>
+
+</div>
+
+<div class="audit">
+
+<h2>Recent Audit Activity</h2>
+
+<div class="audit-item">
+Finance Team created CR-001
+</div>
+
+<div class="audit-item">
+AMS completed analysis
+</div>
+
+<div class="audit-item">
+Manager approved CR-001
+</div>
+
+<div class="audit-item">
+CAB approved deployment
+</div>
+
+<div class="audit-item">
+Production deployment scheduled
+</div>
+
+</div>
+
+</body>
+
+</html>

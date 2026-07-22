@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>SAP AMS Dashboard</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+    padding:30px;
+}
+
+h1{
+    color:#0a6ed1;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+    max-width:900px;
+}
+
+select,
+textarea{
+
+    width:100%;
+    padding:12px;
+    margin-top:10px;
+    margin-bottom:20px;
+
+    border:1px solid #ccc;
+    border-radius:6px;
+}
+
+button{
+
+    background:#0a6ed1;
+    color:white;
+
+    border:none;
+    padding:12px 24px;
+
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.ai-box{
+
+    background:#e8f4ff;
+    border-left:5px solid #0a6ed1;
+
+    padding:15px;
+    margin-top:20px;
+    margin-bottom:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+
+    <h1>SAP AMS Dashboard</h1>
+
+    <div
+    id="notificationCard"
+    style="
+    background:#fff3cd;
+    border-left:5px solid #ffc107;
+    padding:15px;
+    margin-bottom:20px;
+    border-radius:8px;
+    font-weight:bold;
+    display:none;
+    ">
+    </div>
+
+    <div>
+
+        <button
+        onclick="
+        localStorage.setItem('dashboardFrom','ams');
+        window.location.href='index.html';
+        "
+        style="
+        background:#17a2b8;
+        color:white;
+        border:none;
+        padding:10px 18px;
+        border-radius:8px;
+        cursor:pointer;
+        margin-right:10px;
+        ">
+        📊 Analytics Dashboard
+        </button>
+
+        <button
+        onclick="logout()"
+        style="
+        background:#dc3545;
+        color:white;
+        border:none;
+        padding:10px 18px;
+        border-radius:8px;
+        cursor:pointer;
+        ">
+        🚪 Logout
+        </button>
+
+    </div>
+
+</div>
+
+<div id="crContainer"></div>
+<div id="crContainer"></div>
+
+<script>
+    const role = localStorage.getItem("role");
+
+    if(role !== "AMS" && role !== "Admin"){
+
+        alert("Access Denied");
+
+        window.location.href = "login.html";
+    }
+
+async function loadCRs(){
+
+    const response =
+    await fetch("http://localhost:3000/crs");
+
+    const crs =
+    await response.json();
+
+    const pendingCount = crs.filter(cr => cr.status === "Pending").length;
+
+    const container =
+    document.getElementById("crContainer");
+
+    const notification =
+    document.getElementById("notificationCard");
+
+    notification.style.display = "block";
+
+    notification.innerHTML =
+    `🔔 Pending Change Requests : ${pendingCount}`;
+
+    setTimeout(() => {
+
+        notification.style.opacity = "0";
+
+        setTimeout(() => {
+
+            notification.style.display = "none";
+            notification.style.opacity = "1";
+
+        },500);
+
+    },3000);
+
+    container.innerHTML = "";
+
+    crs.forEach(cr => {
+
+        if(cr.status !== "Pending"){
+        return;
+    }
+
+
+        container.innerHTML += `
+
+        <div class="card">
+
+            <h2>${cr.cr_id} : ${cr.title}</h2>
+
+            <p>
+                <strong>Module:</strong>
+                ${cr.module}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                ${cr.status}
+            </p>
+
+            <p>
+                <strong>Requester:</strong>
+                ${cr.requester}
+            </p>
+
+            <p>
+                <strong>BRD:</strong>
+
+                ${
+                    cr.brd_file
+                    ? `<a href="http://localhost:3000/uploads/${cr.brd_file}"
+                    target="_blank">
+                    📄 View BRD
+                        </a>`
+                    : "Not Uploaded"
+                }
+
+            </p>
+
+            <hr>
+
+            <h3>Impact Analysis</h3>
+
+            <textarea rows="4"></textarea>
+
+            <h3>Business Impact</h3>
+
+            <textarea rows="3"></textarea>
+
+            <h3>Priority</h3>
+
+            <select id="priority-${cr.id}">
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+                <option>Critical</option>
+            </select>
+
+            <h3>Risk Assessment</h3>
+
+            <select id="risk-${cr.id}">
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+            </select>
+
+            <br><br>
+
+            <button onclick="submitAnalysis(${cr.id})">
+                Submit Analysis & Forward To Manager
+            </button>
+
+        </div>
+
+        <br>
+        `;
+    });
+    if (pendingCount === 0) {
+
+    container.innerHTML = `
+        <div class="card" style="text-align:center;padding:50px;">
+
+    <div style="font-size:60px;color:#0a6ed1;">📄</div>
+
+    <h2 style="margin-top:15px;">No Pending Change Requests</h2>
+
+    <p style="color:#666;">
+        There are currently no change requests awaiting AMS analysis.
+    </p>
+
+</div>
+    `;
+
+}
+}
+async function submitAnalysis(crId){
+
+    const priority =
+    document.getElementById(`priority-${crId}`).value;
+
+    const risk =
+    document.getElementById(`risk-${crId}`).value;
+
+    const response =
+    await fetch(
+        "http://localhost:3000/update-analysis",
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                crId,
+                priority,
+                risk
+            })
+        }
+    );
+
+    const data =
+    await response.json();
+
+    alert(data.message);
+
+    loadCRs();
+}
+
+loadCRs();
+function logout(){
+
+    document.getElementById("logoutModal").style.display = "flex";
+
+}
+
+function closeLogoutModal(){
+
+    document.getElementById("logoutModal").style.display = "none";
+
+}
+
+function confirmLogout(){
+
+    localStorage.clear();
+
+    window.location.href = "login.html";
+
+}
+
+</script>
+<div
+id="logoutModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:1000;
+">
+
+    <div
+    style="
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:350px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    ">
+
+        <h2 style="margin-top:0;">Confirm Logout</h2>
+
+        <p>
+            Are you sure you want to logout?
+        </p>
+
+        <button
+        onclick="closeLogoutModal()"
+        style="
+        background:#6c757d;
+        margin-right:10px;
+        ">
+        Cancel
+        </button>
+
+        <button
+        onclick="confirmLogout()"
+        style="
+        background:#dc3545;
+        ">
+        Logout
+        </button>
+
+    </div>
+
+</div>
+</body>
+
+</html>

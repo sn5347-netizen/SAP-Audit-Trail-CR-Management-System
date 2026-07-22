@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Requester Dashboard</title>
+
+    <style>
+
+        body{
+            font-family:Arial,sans-serif;
+            background:#f4f6f9;
+            padding:30px;
+        }
+
+        h1{
+            color:#0a6ed1;
+        }
+
+        .card{
+            background:white;
+            padding:25px;
+            border-radius:12px;
+            box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+            max-width:700px;
+        }
+
+        input,select,textarea{
+
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            margin-bottom:20px;
+
+            border:1px solid #ccc;
+            border-radius:6px;
+
+            box-sizing:border-box;
+        }
+
+        button{
+
+            background:#0a6ed1;
+            color:white;
+
+            border:none;
+
+            padding:12px 24px;
+
+            border-radius:6px;
+
+            cursor:pointer;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<button
+onclick="logout()"
+style="
+background:#dc3545;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+float:right;
+">
+🚪 Logout
+</button>
+
+<h1>Requester Dashboard</h1>
+
+<div class="card">
+
+    <h2>Create Change Request</h2>
+
+    <label><strong>CR Title <span style="color:red;">*</span></strong></label>
+
+    <input
+        type="text"
+        id="title"
+        placeholder="CR Title"
+        onkeyup="searchSimilarCRs()"
+    >
+    <div
+    id="similarCRBox"
+    style="
+    display:none;
+    margin-top:10px;
+    margin-bottom:20px;
+    padding:15px;
+    background:#fff8e1;
+    border-left:5px solid #ffc107;
+    border-radius:8px;
+    ">
+    </div>
+    <label><strong>Module <span style="color:red;">*</span></strong></label>
+    <select id="module">
+
+        <option>SAP FI</option>
+        <option>SAP MM</option>
+        <option>SAP SD</option>
+        <option>SAP PP</option>
+
+    </select>
+
+    <label>
+    <strong>Priority <span style="color:red;">*</span></strong>
+    </label>
+        <select id="priority">
+
+        <option value="Low">Low</option>
+
+        <option value="High">High</option>
+
+        <option value="Critical">Critical</option>
+
+    </select>
+    <label>
+    <strong>Description <span style="color:red;">*</span></strong>
+    </label>
+    <textarea
+        id="description"
+        rows="5"
+        placeholder="Detailed Change Description"
+    ></textarea>
+    <h3>
+    Upload BRD
+    <span style="font-size:15px;color:#777;">(Optional)</span>
+    </h3>
+
+    <input
+        type="file"
+        id="brdFile"
+        accept=".pdf,.doc,.docx"
+    />
+
+    <button id="submitBtn" onclick="submitCR()">
+        Submit CR
+    </button>
+
+    <div
+id="successMessage"
+style="
+display:none;
+margin-top:20px;
+padding:18px;
+background:#e8f5e9;
+border-left:5px solid #198754;
+border-radius:10px;
+color:#155724;
+font-size:16px;
+line-height:1.6;
+box-shadow:0 4px 10px rgba(0,0,0,0.08);
+transition:opacity 0.6s ease;
+opacity:1;
+">
+</div>
+</div>
+<script>
+
+async function searchSimilarCRs(){
+
+    const title =
+    document.getElementById("title").value.trim();
+
+    const box =
+    document.getElementById("similarCRBox");
+
+    if(title.length < 2){
+
+        box.style.display = "none";
+        box.innerHTML = "";
+
+        return;
+
+    }
+
+    const response =
+    await fetch(
+        `http://localhost:3000/search-cr?title=${encodeURIComponent(title)}`
+    );
+
+    const results =
+    await response.json();
+
+    if(results.length === 0){
+
+        box.style.display = "none";
+        box.innerHTML = "";
+
+        return;
+
+    }
+
+    let html = `
+    <h3 style="margin-top:0;">
+    🤖 Similar Change Requests Found
+    </h3>
+    `;
+
+    results.forEach(cr => {
+
+        html += `
+        <div style="
+        padding:10px;
+        margin-top:10px;
+        border-bottom:1px solid #ddd;
+        ">
+
+            <strong>${cr.cr_id}</strong><br>
+
+            ${cr.title}
+
+        </div>
+        `;
+
+    });
+
+    box.innerHTML = html;
+
+    box.style.display = "block";
+
+}
+
+async function submitCR(){
+
+    let title =
+    document.getElementById("title").value;
+
+    const module =
+    document.getElementById("module").value;
+
+    const priority =
+    document.getElementById("priority").value;
+
+    let description =
+    document.getElementById("description").value;
+
+    title = title.trim();
+    description = description.trim();
+
+    if (title === "") {
+        alert("CR Title is required.");
+        return;
+    }
+
+    if (module === "") {
+        alert("Please select a module.");
+        return;
+    }
+
+    if (priority === "") {
+        alert("Please select a priority.");
+        return;
+    }
+
+    if (description === "") {
+        alert("Description is required.");
+        return;
+    }
+
+    const brdFile =
+    document.getElementById("brdFile").files[0];
+
+    const formData = new FormData();
+
+formData.append("title", title);
+formData.append("module", module);
+formData.append("priority", priority);
+formData.append("description", description);
+formData.append("brdFile", brdFile);
+
+const submitBtn = document.getElementById("submitBtn");
+
+submitBtn.disabled = true;
+submitBtn.innerHTML = "Submitting...";
+
+try {
+
+    const response = await fetch(
+        "http://localhost:3000/create-cr",
+        {
+            method: "POST",
+            body: formData
+        }
+    );
+
+    const data = await response.json();
+
+    if(data.duplicateDetected === "Yes"){
+
+    document.getElementById("successMessage").innerHTML = `
+    ✅ <strong>Change Request Created Successfully.</strong><br><br>
+
+    🤖 <strong>AI Duplicate Detection</strong><br>
+
+    A similar Change Request already exists.<br><br>
+
+    <strong>Similar CR:</strong> ${data.similarCR}<br>
+
+    <strong>Duplicate Probability:</strong> ${data.duplicateProbability}%`;
+
+}
+else{
+
+    document.getElementById("successMessage").innerHTML =
+    "✅ <strong>Change Request Created Successfully.</strong>";
+
+}
+    document.getElementById("successMessage").style.display =
+    "block";
+
+    document.getElementById("title").value = "";
+    document.getElementById("module").selectedIndex = 0;
+    document.getElementById("priority").selectedIndex = 0;
+    document.getElementById("description").value = "";
+    document.getElementById("brdFile").value = "";
+    document.getElementById("similarCRBox").innerHTML = "";
+    document.getElementById("similarCRBox").style.display = "none";
+
+    setTimeout(() => {
+
+    const msg = document.getElementById("successMessage");
+
+    msg.style.opacity = "0";
+
+    setTimeout(() => {
+
+        msg.style.display = "none";
+        msg.style.opacity = "1";
+
+    }, 600);
+
+}, 6000);
+
+}
+catch(err){
+
+    alert("Something went wrong while creating the Change Request.");
+
+}
+finally{
+
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = "Submit CR";
+
+}
+}
+function logout(){
+
+    document.getElementById("logoutModal").style.display = "flex";
+
+}
+
+function closeLogoutModal(){
+
+    document.getElementById("logoutModal").style.display = "none";
+
+}
+
+function confirmLogout(){
+
+    localStorage.clear();
+
+    window.location.href = "login.html";
+
+}
+
+</script>
+<div
+id="logoutModal"
+style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+justify-content:center;
+align-items:center;
+z-index:1000;
+">
+
+    <div
+    style="
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    width:350px;
+    text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    ">
+
+        <h2 style="margin-top:0;">Confirm Logout</h2>
+
+        <p>
+            Are you sure you want to logout?
+        </p>
+
+        <button
+        onclick="closeLogoutModal()"
+        style="
+        background:#6c757d;
+        margin-right:10px;
+        ">
+        Cancel
+        </button>
+
+        <button
+        onclick="confirmLogout()"
+        style="
+        background:#dc3545;
+        ">
+        Logout
+        </button>
+
+    </div>
+
+</div>
+</body>
+</html>
