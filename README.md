@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="assets/banner.png" alt="SAP Audit Trail Banner" width="100%">
+</p>
+
+<br>
+
 # 🚀 SAP Audit Trail – Change Request Management System
 
 <p align="center">
