@@ -3,6 +3,10 @@
 </p>
 
 <br>
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Node.js](https://img.shields.io/badge/Node.js-Express-green)
+![Database](https://img.shields.io/badge/Database-MySQL-blue)
+![Status](https://img.shields.io/badge/Status-Complete-success)
 
 # 🚀 SAP Audit Trail – Change Request Management System
 
